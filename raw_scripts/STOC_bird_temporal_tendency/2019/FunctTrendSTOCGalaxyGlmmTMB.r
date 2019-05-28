@@ -240,7 +240,7 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
 
         i <- i + 1
           
-        d <- subset(donneesAll,espece==sp)  ## d data pour l'espece en court  / cut the data keeping only the i species
+        d <<- subset(donneesAll,espece==sp)  ## d data pour l'espece en court declaré en globale car fonction r2 ne fonctionne pas sinon / cut the data keeping only the i species, declared in the global environment of R because the fonction r2 doesnot work without this
         
         nomSp <- as.character(tabsp[sp,"nom"])  ## info sp
         cat("\n(",i,"/",nbSp,") ",sp," | ", nomSp,"\n",sep="")
@@ -274,10 +274,10 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
 # browser()
    ### Utilisation des modèles mixtes pour obtenir les tendances d evolution par an du csi cti ou ctri / Use of mixte model for the estimation of the annual variations of the csi cti or ctri 
             cat("\nEstimation de la variation annuelle avec glmmTMB(",sp,"~ factor(annee)+(1|carre))\n",sep="")
-    browser()    
+    #browser()    
 			#md.f <- lmer(indic~ factor(year)+(1|id_plot),data=dd)  ##### effet aleatoire liés aux carrés sur l'ordonnée à l'origine / random effects of plots on intercept 
-			glm1 <- glmmTMB(abond~ factor(annee)+(1|carre),data=d,family=nbinom1) 
-			dispAn <- r2(glmmTMB(abond~ factor(annee)+(1|carre),data=d,family=nbinom1))
+			glm1 <- glmmTMB(abond~ factor(annee)+(1|carre),data=d,family=nbinom1) #### nbinom1 correspond à du quasi poisson
+			dispAn <- r2(glm1)
 			sglm1 <- summary(glm1)  #### sortie du modele / output of the model
 
 			sglm1 <- coefficients(sglm1)$cond ### coefficient regression de chaque variable avec les résultats des tests statistiques / regression coefficient of each predictive variables with results of the statistical tests
