@@ -432,4 +432,4 @@ write.csv(ggdata,paste("Output/ggdata_",indicator,id,".csv",sep=""),row.names=FA
 ################## 
 ###  Do your analysis
 
-csi_cti_ctri(tabCLEAN=tabCLEAN,coordCarre=coordCarre,spTrait=spTrait,dd=NULL,Var="ssi",indicator="csi",ic=TRUE,plot_smooth = TRUE,methode="lmer",init_1989 = FALSE)  ##### exemple pour l'indicateur csi sans csi déjà calculé donc à partir du ssi avec interval de confiance et utilisant modele mixte / example for the csi index which is not already calculated from the ssi with confidence interval using the mixte model 
+csi_cti_ctri(tabCLEAN=tabCLEAN,coordCarre=coordCarre,spTrait=spTrait,dd=NULL,Var=Var,indicator=indicator,ic=ic,plot_smooth = plot_smooth,methode=methode,init_1989 = FALSE)  ##### exemple pour l'indicateur csi sans csi déjà calculé donc à partir du ssi avec interval de confiance et utilisant modele mixte / example for the csi index which is not already calculated from the ssi with confidence interval using the mixte model 
