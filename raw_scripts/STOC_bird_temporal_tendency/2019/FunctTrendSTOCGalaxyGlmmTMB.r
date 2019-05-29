@@ -175,7 +175,20 @@ filter_rare_species<-function(tab){
 main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,tabsp=tabsp,annees=annees,figure=TRUE,description=TRUE,tendanceSurFigure=TRUE,methode="lmer", ###### declaration des arguments  listSp=sp était avant declaré avant la fonction mais il me semble que ca marche aussi comme cela
                      seuilOccu=14,seuilAbond=NA) {
 
-   
+#########  verification de la presence et/ou creation des dossiers de sortie    / check of the presence and/or creation of the outputs folder 
+save.wd=id
+
+   if(!exists(paste0("Output/",save.wd)))
+  {
+    dir.create(paste0("Output/",save.wd), recursive = T)  #### recursive sur TRUE pour indiquer que l'ensemble du chemin doit être creer / recursive with TRUE to indicate that the full path should be created
+  }
+     if(!exists(paste0("Output/",save.wd,"/Incertain")))
+  {
+    dir.create(paste0("Output/",save.wd,"/Incertain"), recursive = T)  #### recursive sur TRUE pour indiquer que l'ensemble du chemin doit être creer / recursive with TRUE to indicate that the full path should be created
+  }
+  
+  
+  ### setwd(paste0())  ##### Si on veut rajouter le dossier de depart  mais pas utile ici
 
     filesaveAn <-  paste("Output/",id,"/variationsAnnuellesEspece_",id,".tabular",  ##### Nom du dossier ET fichier de sortie des resultats par année / name of the output file with results for each years
                          sep = "")
@@ -266,16 +279,12 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
 ###############################  
 
 
-# if (methode == "lmer") {      ### SI REACTIVE FAUDRA RAJOUTER UNE ACCOLADE PLUS LOIN
-            # cat("Method : lmer \n")
-
 
 ###################
 # browser()
    ### Utilisation des modèles mixtes pour obtenir les tendances d evolution par an du csi cti ou ctri / Use of mixte model for the estimation of the annual variations of the csi cti or ctri 
             cat("\nEstimation de la variation annuelle avec glmmTMB(",sp,"~ factor(annee)+(1|carre))\n",sep="")
-    #browser()    
-			#md.f <- lmer(indic~ factor(year)+(1|id_plot),data=dd)  ##### effet aleatoire liés aux carrés sur l'ordonnée à l'origine / random effects of plots on intercept 
+      
 			glm1 <- glmmTMB(abond~ factor(annee)+(1|carre),data=d,family=nbinom1) #### nbinom1 correspond à du quasi poisson
 			dispAn <- r2(glm1)
 			sglm1 <- summary(glm1)  #### sortie du modele / output of the model
@@ -300,61 +309,19 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
 
 	if(assessIC)
 {	
-		# prof <- profile(md.f)  #### Nouvel interval de confiance avec utilisation du logarithme des ecarts types / logarithms of standard deviations are used, while varianceProf converts from the standard-deviation to the variance scale
 		MODconfint1 <- confint(glm1) #### plus rapide de passer par la fonction profile mais pas indispensable fonctionne aussi directement sur modele mixte md.f  / more rapid using both function profile and confint but works also directly on output of the model 
 		se.sup <- MODconfint1[2:nbans,2]#### [2:nban+2,2] version pour sortie lmer()
 		ic_sup_sim <- c(0,exp(se.sup)) 
 		se.inf <- MODconfint1[2:nbans,1]#### [2:nban+2,2] version pour sortie lmer()
         ic_inf_sim <- c(0,exp(se.inf))   			
-# coefdata.f$se.inf <- ggdata$se.inf
-# coefdata.f$se.sup <- ggdata$se.sup
+
 
 }else{
 			ic_inf_sim <- NA
             ic_sup_sim <- NA
 }
 
-######## DEBUT ANCIENNE VERSION
-
-
-        # GLM pour calcul des tendances annuelles de l'evolution des populations / GLM to measure annual tendency of population evolution 
-       # formule <- as.formula("abond~as.factor(carre)+as.factor(annee)") #### specification du modèle = log lineaire / specifying the model = log linear
-       # if(assessIC) {##### OPTION A RENTRER AU DEBUT PEUT ËTRE A METTRE DANS LES ARGUMENTS SI LAISSE LE CHOIX SINON L ARG PAR DEFAUT LORS DE LA DECLARATION DE LA FONCTION
-           # glm1 <- glm(formule,data=d,family=quasipoisson)  ##### fit model lineaire general avec intervalle de confiance disponible / fit linear and generalized model with confidence intervalle available
-       # } else {
-           # glm1 <- try(speedglm(formule,data=d,family=quasipoisson())) ##### fit modele lineaire et generaux pour les gros jeux de données / fit of linear and generalized model for large-medium dataset
-           # if(class(glm1)[1]=="try-error")
-               # glm1 <- glm(formule,data=d,family=quasipoisson) ##### comprends pas mais je pense que c'est speedglm qui marche pas avec toutes les données
-       # }
-       # sglm1 <- summary(glm1)  #### sortie du modele / output of the model
-       # sglm1 <- coefficients(sglm1) ### coefficient regression de chaque variable avec les résultats des tests statistiques / regression coefficient of each predictive variables with results of the statistical tests
-       # sglm1 <- tail(sglm1,pasdetemps) #### recupére les derniers elements du modèle avec la taille de l'objet "pasdetemps" car le nombre de coef = nbre d'année et pas les coefficient de regression de la variable carre / retrieve only the coefficient regression of the variable year
-       # coefan <- as.numeric(as.character(sglm1[,1]))#### coefficient de regression de la variable année (1 pour chaque année)
-        
-        # coefannee <- c(1,exp(coefan))## coefannee vecteur des variation d'abondance par annee avec transformation inverse du log :exp() / regression coefficient of the year back transformed from log(abundance) : exp()
-        
-		# erreuran <- as.numeric(as.character(sglm1[,2])) #### erreur standard sur le coefficient de regression de la variable annee  / standard error on the regression coefficient of the year 
-        # erreurannee1 <- c(0,erreuran*exp(coefan))## erreur standard par année / the standard error per year  ###### LA J AI UN DOUTE NORMALEMENT INTERVAL DE CONF C CI_lower <- coefficients(lin_mod)[2] - 1.96*summary(lin_mod)$coefficients[2,2]
-                                                                                                               ###CI_upper <- coefficients(lin_mod)[2] + 1.96*summary(lin_mod)$coefficients[2,2]
-		
-        # pval <- c(1,as.numeric(as.character(sglm1[,4])))###### p value
-  
-
-
-
-  
-        # calcul des intervalle de confiance avec methode de bootstrap pour simuler des coef de regress sur lequel intervalle de conf sont mesurés/ calcul of the confidence interval using bootstrap method to simulate set regression coefficients and s.e.with uncertainty   POURQUOI PAS UTILISE confint.glm() ou boot() ou ci.boot()
-        
-        # if(assessIC) {
-        # glm1.sim <- sim(glm1)
-        # ic_inf_sim <- c(1,exp(tail(apply(coef(glm1.sim), 2, quantile,.025),pasdetemps)))
-        # ic_sup_sim <- c(1,exp(tail(apply(coef(glm1.sim), 2, quantile,.975),pasdetemps)))
-        # } else {
-            # ic_inf_sim <- NA
-            # ic_sup_sim <- NA
- 
-        # }
- ################### FIN DE ANCIENNE FONCTION REMPLACE    
+   
         
         
         tab1 <- data.frame(annee,val=coefannee,  ## tab1 table pour la realisation des figures / table for the graphical outputs  ### 2EME POUR GRAPH ici ce sont le coef de regress annee en fonction des annéés alors que tab3 c'est les abondance en fct des années et tab2 nombre de carré total et avec presence
@@ -384,20 +351,13 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
                             p_value = round(tab1$pval,3),significatif = !is.na(tab1$catPoint),
                             nb_carre,nb_carre_presence,abondance=abond,AjustR2fix=AjustR2fix,AjustR2fixrand=AjustR2fixrand)
         
-        ## GLM pour calcul des tendance generale sur la periode avec modele log lineaire / GLM to measure the tendency of population evolution on the studied period with log linear model
-        # formule <- as.formula(paste("abond~ as.factor(carre) + annee",sep="")) ### 
-          #  browser()
+        ## GLMM pour calcul des tendance generale sur la periode avec modele log lineaire / GLMM to measure the tendency of population evolution on the studied period with log linear model
+ 
+           # browser()
     cat("\nEstimation de la tendance sur ",nbans," ans avec glmmTMB(",sp,"~ annee +(1|carre))\n",sep="")
        			md2 <- glmmTMB(abond~ annee+(1|carre),data=d,family=nbinom1) 
 
-         # if(assessIC) {
-             # md2 <- glm(formule,data=d,family=quasipoisson) }
-        # else {
-                # md2 <- try(speedglm(formule,data=d,family=quasipoisson()),silent=TRUE)
 
-                # if(class(md2)[1]=="try-error")
-                    # md2 <- glm(formule,data=d,family=quasipoisson)
-            # }
 
         
        smd2 <- summary(md2)       #### sortie du modele / output of the model
@@ -425,9 +385,7 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
 		UL <- exp(se.sup)
 		se.inf <- MODconfint2[2,1]#### [2:nban+2,2] version pour sortie lmer()
         LL <- exp(se.inf) 
-            # md2.sim <- sim(md2)
-            # LL <- round(exp(tail(apply(coef(md2.sim), 2, quantile,.025),1)),3)
-            # UL <- round(exp(tail(apply(coef(md2.sim), 2, quantile,.975),1)),3)
+
         } else {
             LL <- NA
             UL <- NA
@@ -443,7 +401,6 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
         pourcent <- round((exp(coefan*pasdetemps)-1)*100,3)
         ## mesure de la surdispersion / overdispersion measurment
 
-          #if(assessIC) dispTrend <- md2$deviance/md2$null.deviance else dispTrend <- md2$deviance/md2$nulldev
 
                         dispTrend <- r2(md2) 
 						AjustR2fix2 <- dispTrend$rsq.marginal################### NOUVEAU ET PAS OUBLIE DE VERIF LES PACKAGES ASSOCIES
@@ -452,17 +409,7 @@ main.glm <- function(id="france",donneesAll=dataCLEAN,assessIC= TRUE,listSp=sp,t
         ## classement en categorie incertain /classifying wrong or not reliable results 
        # browser()
         if(assessIC) {
-        # if(dispTrend > 2 | dispAn > 2 | median( nb_carre_presence)<seuilOccu) catIncert <- "Incertain" else catIncert <-"bon"  ##### en fonction de l'indice de surdispersion et presence < à seuil occurence / based on the overdispersion index and the presence on a minimum number of plots
-        # vecLib <-  NULL
-        # if(dispTrend > 2 | dispAn > 2 | median( nb_carre_presence)<seuilOccu) {
-            # if(median( nb_carre_presence)<seuilOccu) {
-                # vecLib <- c(vecLib,"espece trop rare")
-            # }
-            # if(dispTrend > 2 | dispAn > 2) {
-                # vecLib <- c(vecLib,"deviance")
-            # }
-        # }
-        # raisonIncert <-  paste(vecLib,collapse=" et ")
+   
 		        if(AjustR2fixrand > AjustR2fix | AjustR2fixrand2 > AjustR2fix2 | AjustR2fix < 0.20 | AjustR2fix2 < 0.20 | median( nb_carre_presence)<seuilOccu) catIncert <- "Incertain" else catIncert <-"bon"  ##### en fonction de l'indice de surdispersion et presence < à seuil occurence / based on the overdispersion index and the presence on a minimum number of plots
         vecLib <-  NULL
         if(AjustR2fixrand > AjustR2fix | AjustR2fixrand2 > AjustR2fix2 | AjustR2fix < 0.20 | AjustR2fix2 < 0.20 | median( nb_carre_presence)<seuilOccu) {
@@ -582,10 +529,9 @@ affectCatEBCC <- function(trend,pVal,ICinf,ICsup){
 ggplot.espece <- function(dgg,tab1t,id,serie=NULL,sp,valide,nomSp=NULL,description=TRUE,
                           tendanceSurFigure=TRUE,seuilOccu=14, vpan,assessIC=TRUE) {
   
-  #  serie=NULL;nomSp=NULL;description=TRUE;valide=catIncert
-  #  tendanceSurFigure=TRUE;seuilOccu=14
+ 
   require(ggplot2)
-# browser() 
+ ##browser() 
   figname<- paste("Output/",id,"/",ifelse(valide=="Incertain","Incertain/",""),
                   sp,"_",id,serie, ".png",
                   sep = "")
